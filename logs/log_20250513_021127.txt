@@ -1,0 +1,13 @@
+[20250513_021129] Deteksi: Plat Nomor | Confidence: 60.65% | OCR: 
+[20250513_021129] Deteksi: Plat Nomor | Confidence: 60.09% | OCR: 
+[20250513_021129] Deteksi: Plat Nomor | Confidence: 57.62% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 69.52% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 64.75% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 69.72% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 66.20% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 50.14% | OCR: 
+[20250513_021130] Deteksi: Plat Nomor | Confidence: 53.82% | OCR: 
+[20250513_021131] Deteksi: Plat Nomor | Confidence: 50.37% | OCR: 
+[20250513_021131] Deteksi: Plat Nomor | Confidence: 58.42% | OCR: 
+[20250513_021131] Deteksi: Plat Nomor | Confidence: 59.99% | OCR: 
+[20250513_021131] Deteksi: Plat Nomor | Confidence: 57.62% | OCR: fe 2156 i

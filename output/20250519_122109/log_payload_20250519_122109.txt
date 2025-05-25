@@ -1,0 +1,20 @@
+==== Encrypted OCR Log ====
+Nonce: S95XLF7bPzYtNjFR
+Ciphertext: MShoxs3xB/8gdgsGaIzwHC+O37APEXXz0y7iXfczUDpHKgAuDkthCbfmqvOV9+znP0WjR7D/sMDPt3ab+ObqftI=
+
+Nonce: IdYE+HNmOMIPEw5H
+Ciphertext: PvR2WqOKymwOX1ynyZoo7y7r6rywfBarDE+vBBc1p9bXASx1AhFK705Ut988CfxdxFe+r1Te+XBcvm3aKwfai26wNqEUqdM=
+
+==== Encrypted Image Files ====
+File: crop_20250519_122109.jpg
+Nonce: 3cLn5G2H1lM+gpA9
+Encrypted File: crop_20250519_122109.jpg.enc
+
+File: resized_20250519_122109.jpg
+Nonce: cXh/5IUrc15lkhwA
+Encrypted File: resized_20250519_122109.jpg.enc
+
+File: annotated_20250519_122109.jpg
+Nonce: IPbom66PFhirPc3v
+Encrypted File: annotated_20250519_122109.jpg.enc
+

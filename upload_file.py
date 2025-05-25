@@ -12,18 +12,18 @@ from ultralytics import YOLO
 from paddleocr import PaddleOCR
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-# === MQTT Configuration ===
+# === Konfigurasi MQTT ===
 MQTT_BROKER = "0fc5ab61ae91429d80cc08fc224eb005.s1.eu.hivemq.cloud"
 MQTT_PORT = 8883
 MQTT_USERNAME = "tirta71"
 MQTT_PASSWORD = "hero1234"
 MQTT_TOPIC = "plat/ocr"
 
-# === Static Key (Base64 → Bytes)
+# === Kunci Enkripsi ===
 KEY_B64 = "kKgTWK1FuLFlHrxRX8xlE7e9IYvqqMaI8CyZGhmmu6c="
 KEY = base64.b64decode(KEY_B64)
 
-# === Fungsi Enkripsi Teks ===
+# === Enkripsi Teks ===
 def encrypt_text(text: str, key: bytes) -> dict:
     nonce = secrets.token_bytes(12)
     chacha = ChaCha20Poly1305(key)
@@ -37,7 +37,7 @@ def encrypt_text(text: str, key: bytes) -> dict:
         "poly1305_tag": base64.b64encode(ciphertext[-16:]).decode()
     }
 
-# === Fungsi Enkripsi File ===
+# === Enkripsi File Gambar ===
 def encrypt_file(file_path: str, key: bytes, output_dir: str) -> dict:
     with open(file_path, "rb") as f:
         data = f.read()
@@ -59,7 +59,7 @@ def encrypt_file(file_path: str, key: bytes, output_dir: str) -> dict:
         "poly1305_tag": base64.b64encode(ciphertext[-16:]).decode()
     }
 
-# === Fungsi Kirim MQTT ===
+# === Kirim MQTT ===
 def kirim_ke_mqtt(payload: dict):
     client = mqtt.Client()
     client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
@@ -75,11 +75,35 @@ def kirim_ke_mqtt(payload: dict):
     except Exception as e:
         print(f"❌ Gagal kirim MQTT: {e}")
 
-# === Inisialisasi Model
+# === Simpan Log ke File ===
+def simpan_log(payload: dict, output_dir: str):
+    log_path = os.path.join(output_dir, "log_payload.txt")
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write("=== LOG DETEKSI PLAT NOMOR ===\n")
+        f.write(f"Waktu       : {payload['timestamp']}\n")
+        f.write(f"Plat Nomor  : {payload['plat_nomor']}\n")
+        f.write(f"Confidence  : {payload['confidence']}%\n")
+        f.write(f"Device ID   : {payload['device_id']}\n\n")
+        f.write("--- Enkripsi OCR ---\n")
+        f.write(f"Nonce       : {payload['ocr']['nonce']}\n")
+        f.write(f"Ciphertext  : {payload['ocr']['ciphertext'][:50]}... (dipotong)\n")
+        f.write(f"Encrypt Time: {payload['ocr']['encrypt_time_ms']} ms\n")
+        f.write(f"Tag Poly1305: {payload['ocr']['poly1305_tag']}\n\n")
+        f.write("--- Enkripsi Gambar ---\n")
+        f.write(f"Nama File   : {payload['gambar']['nama_file']}\n")
+        f.write(f"Ukuran Asli : {payload['gambar']['ukuran_byte']} bytes\n")
+        f.write(f"Ukuran Enkr : {payload['gambar']['ukuran_terenkripsi']} bytes\n")
+        f.write(f"Nonce       : {payload['gambar']['nonce']}\n")
+        f.write(f"Ciphertext  : {payload['gambar']['ciphertext'][:50]}... (dipotong)\n")
+        f.write(f"Encrypt Time: {payload['gambar']['encrypt_time_ms']} ms\n")
+        f.write(f"Tag Poly1305: {payload['gambar']['poly1305_tag']}\n\n")
+        f.write("✅ Payload berhasil diproses dan dikirim ke MQTT.\n")
+
+# === Load Model YOLO & OCR ===
 model = YOLO("best.pt")
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
-# === Pilih File Gambar
+# === Pilih Gambar
 Tk().withdraw()
 image_path = filedialog.askopenfilename(
     title="Pilih gambar plat nomor",
@@ -144,5 +168,6 @@ for box in results[0].boxes:
 
             print(json.dumps(payload, indent=2))
             kirim_ke_mqtt(payload)
+            simpan_log(payload, output_dir)
         else:
-            print("❌ Tidak ada teks terdeteksi.")
+            print("❌ Tidak ada teks terdeteksi oleh OCR.")

@@ -1,0 +1,22 @@
+=== LOG DETEKSI PLAT NOMOR ===
+Waktu       : 2025-05-25T22:26:11.620924
+Plat Nomor  : 1067NBF
+Confidence  : 70.12%
+Device ID   : 1
+
+--- Enkripsi OCR ---
+Nonce       : KLzPHqv7m9avQcnh
+Ciphertext  : rTkgo9LVF9VxmcHuNphEALySV5ZibtldiGKsO/WBH+bKEAFj+E... (dipotong)
+Encrypt Time: 0.02 ms
+Tag Poly1305: gR/myhABY/hJs4rbcbeGtg==
+
+--- Enkripsi Gambar ---
+Nama File   : crop_20250525_222609.jpg
+Ukuran Asli : 19146 bytes
+Ukuran Enkr : 19162 bytes
+Nonce       : FsKmRIvwrnqcnj8J
+Ciphertext  : /2rtRIqjmbX28ehjd+Fu2kZ7UAHbuqxQwaawM+4n6xP1ZxRgeV... (dipotong)
+Encrypt Time: 0.018 ms
+Tag Poly1305: bS7s3SIpx3HGIJrgcfnF5w==
+
+✅ Payload berhasil diproses dan dikirim ke MQTT.

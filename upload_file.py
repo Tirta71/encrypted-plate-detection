@@ -86,7 +86,7 @@ def simpan_log(payload: dict, output_dir: str):
         f.write(f"Device ID   : {payload['device_id']}\n\n")
         f.write("--- Enkripsi OCR ---\n")
         f.write(f"Nonce       : {payload['ocr']['nonce']}\n")
-        f.write(f"Ciphertext  : {payload['ocr']['ciphertext'][:50]}... (dipotong)\n")
+        f.write(f"Ciphertext  : {payload['ocr']['ciphertext']}\n")
         f.write(f"Encrypt Time: {payload['ocr']['encrypt_time_ms']} ms\n")
         f.write(f"Tag Poly1305: {payload['ocr']['poly1305_tag']}\n\n")
         f.write("--- Enkripsi Gambar ---\n")
@@ -94,10 +94,11 @@ def simpan_log(payload: dict, output_dir: str):
         f.write(f"Ukuran Asli : {payload['gambar']['ukuran_byte']} bytes\n")
         f.write(f"Ukuran Enkr : {payload['gambar']['ukuran_terenkripsi']} bytes\n")
         f.write(f"Nonce       : {payload['gambar']['nonce']}\n")
-        f.write(f"Ciphertext  : {payload['gambar']['ciphertext'][:50]}... (dipotong)\n")
+        f.write(f"Ciphertext  : {payload['gambar']['ciphertext']}\n")
         f.write(f"Encrypt Time: {payload['gambar']['encrypt_time_ms']} ms\n")
         f.write(f"Tag Poly1305: {payload['gambar']['poly1305_tag']}\n\n")
         f.write("✅ Payload berhasil diproses dan dikirim ke MQTT.\n")
+
 
 # === Load Model YOLO & OCR ===
 model = YOLO("best.pt")

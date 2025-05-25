@@ -1,0 +1,4 @@
+# Abaikan file video besar
+*.mp4
+video_output/
+test_video_plat.mp4

@@ -24,39 +24,55 @@ KEY_B64 = "kKgTWK1FuLFlHrxRX8xlE7e9IYvqqMaI8CyZGhmmu6c="
 KEY = base64.b64decode(KEY_B64)
 
 # === Enkripsi Teks ===
-def encrypt_text(text: str, key: bytes) -> dict:
+def encrypt_text(text: str, key: bytes, simulate_invalid_tag=False) -> dict:
     nonce = secrets.token_bytes(12)
     chacha = ChaCha20Poly1305(key)
     start = time.perf_counter()
-    ciphertext = chacha.encrypt(nonce, text.encode(), None)
+    ciphertext_full = chacha.encrypt(nonce, text.encode(), None)
     elapsed = round((time.perf_counter() - start) * 1000, 3)
+
+    tag = ciphertext_full[-16:]
+    if simulate_invalid_tag:
+        tag = bytearray(tag)
+        tag[-1] ^= 0xFF
+        tag = bytes(tag)
+
     return {
         "nonce": base64.b64encode(nonce).decode(),
-        "ciphertext": base64.b64encode(ciphertext).decode(),
-        "encrypt_time_ms": elapsed,
-        "poly1305_tag": base64.b64encode(ciphertext[-16:]).decode()
+        "ciphertext": base64.b64encode(ciphertext_full[:-16]).decode(),
+        "poly1305_tag": base64.b64encode(tag).decode(),
+        "encrypt_time_ms": elapsed
     }
 
 # === Enkripsi File Gambar ===
-def encrypt_file(file_path: str, key: bytes, output_dir: str) -> dict:
+def encrypt_file(file_path: str, key: bytes, output_dir: str, simulate_invalid_tag=False) -> dict:
     with open(file_path, "rb") as f:
         data = f.read()
+
     nonce = secrets.token_bytes(12)
     chacha = ChaCha20Poly1305(key)
     start = time.perf_counter()
-    ciphertext = chacha.encrypt(nonce, data, None)
+    ciphertext_full = chacha.encrypt(nonce, data, None)
     elapsed = round((time.perf_counter() - start) * 1000, 3)
+
+    tag = ciphertext_full[-16:]
+    if simulate_invalid_tag:
+        tag = bytearray(tag)
+        tag[-1] ^= 0xFF
+        tag = bytes(tag)
+
     enc_path = os.path.join(output_dir, os.path.basename(file_path) + ".enc")
     with open(enc_path, "wb") as ef:
-        ef.write(ciphertext)
+        ef.write(ciphertext_full)
+
     return {
         "nama_file": os.path.basename(file_path),
         "ukuran_byte": len(data),
-        "ukuran_terenkripsi": len(ciphertext),
+        "ukuran_terenkripsi": len(ciphertext_full),
         "nonce": base64.b64encode(nonce).decode(),
-        "ciphertext": base64.b64encode(ciphertext).decode(),
-        "encrypt_time_ms": elapsed,
-        "poly1305_tag": base64.b64encode(ciphertext[-16:]).decode()
+        "ciphertext": base64.b64encode(ciphertext_full[:-16]).decode(),
+        "poly1305_tag": base64.b64encode(tag).decode(),
+        "encrypt_time_ms": elapsed
     }
 
 # === Kirim MQTT ===
@@ -71,9 +87,9 @@ def kirim_ke_mqtt(payload: dict):
         time.sleep(2)
         client.loop_stop()
         client.disconnect()
-        print("📤 Payload berhasil dikirim ke MQTT.")
+        print("\U0001F4E4 Payload berhasil dikirim ke MQTT.")
     except Exception as e:
-        print(f"❌ Gagal kirim MQTT: {e}")
+        print(f"\u274C Gagal kirim MQTT: {e}")
 
 # === Simpan Log ke File ===
 def simpan_log(payload: dict, output_dir: str):
@@ -97,8 +113,7 @@ def simpan_log(payload: dict, output_dir: str):
         f.write(f"Ciphertext  : {payload['gambar']['ciphertext']}\n")
         f.write(f"Encrypt Time: {payload['gambar']['encrypt_time_ms']} ms\n")
         f.write(f"Tag Poly1305: {payload['gambar']['poly1305_tag']}\n\n")
-        f.write("✅ Payload berhasil diproses dan dikirim ke MQTT.\n")
-
+        f.write("\u2705 Payload berhasil diproses dan dikirim ke MQTT.\n")
 
 # === Load Model YOLO & OCR ===
 model = YOLO("best.pt")
@@ -112,15 +127,16 @@ image_path = filedialog.askopenfilename(
 )
 
 if not image_path:
-    print("❌ Tidak ada file dipilih.")
+    print("\u274C Tidak ada file dipilih.")
     exit()
+
+simulate_invalid = input("Simulasikan tag Poly1305 tidak valid? (y/n): ").strip().lower() == 'y'
 
 frame = cv2.imread(image_path)
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_dir = os.path.join("output", timestamp)
 os.makedirs(output_dir, exist_ok=True)
 
-# === Deteksi Plat Nomor
 results = model.predict(source=frame, conf=0.5)
 annotated = results[0].plot()
 
@@ -147,23 +163,18 @@ for box in results[0].boxes:
             for line in result_ocr:
                 for box, (text, prob) in line:
                     texts.append(f"{text.strip()} ({prob:.2f})")
-                    print(f"📄 OCR: {text.strip()} | Prob: {prob:.2f}")
+                    print(f"\U0001F4C4 OCR: {text.strip()} | Prob: {prob:.2f}")
 
             ocr_text = " | ".join(texts)
-            ocr_encrypted = encrypt_text(ocr_text, KEY)
-            img_encrypted = encrypt_file(crop_path, KEY, output_dir)
+            ocr_encrypted = encrypt_text(ocr_text, KEY, simulate_invalid)
+            img_encrypted = encrypt_file(crop_path, KEY, output_dir, simulate_invalid)
 
             payload = {
                 "timestamp": datetime.now().isoformat(),
                 "plat_nomor": texts[0].split()[0] if texts else "UNKNOWN",
                 "confidence": round(confidence, 2),
                 "device_id": 1,
-                "ocr": {
-                    "nonce": ocr_encrypted["nonce"],
-                    "ciphertext": ocr_encrypted["ciphertext"],
-                    "encrypt_time_ms": ocr_encrypted["encrypt_time_ms"],
-                    "poly1305_tag": ocr_encrypted["poly1305_tag"]
-                },
+                "ocr": ocr_encrypted,
                 "gambar": img_encrypted
             }
 
@@ -171,4 +182,4 @@ for box in results[0].boxes:
             kirim_ke_mqtt(payload)
             simpan_log(payload, output_dir)
         else:
-            print("❌ Tidak ada teks terdeteksi oleh OCR.")
+            print("\u274C Tidak ada teks terdeteksi oleh OCR.")
